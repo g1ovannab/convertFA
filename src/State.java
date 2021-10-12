@@ -16,6 +16,7 @@ public class State {
     public void setFinal(boolean f) { this.finalS = f; }
 
     public boolean addToTable() { return addToTable; }
+    public void setAdd(boolean add) { this.addToTable = add; }
 
     public State(String id, boolean i, boolean f, boolean add){
         this.id = id;
@@ -23,7 +24,6 @@ public class State {
         this.finalS = f;
         this.addToTable = add;
     }
-
 
     public State() {
         this.id = "";

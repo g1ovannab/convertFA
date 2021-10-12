@@ -6,7 +6,6 @@ public class Automaton {
     private ArrayList<State> states;
     private ArrayList<Transition> transitions;
 
-
     public ArrayList<State> getStates() { return states; }
     public void setStates(ArrayList<State> s) { this.states = s; }
 

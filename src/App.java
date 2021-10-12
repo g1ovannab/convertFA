@@ -3,12 +3,13 @@ package src;
 import java.io.*;
 import java.util.*;
 
-public class App {
+public class App{
 
     // generic variables
     public static String line = "";
     public static ArrayList<String> sentences = new ArrayList<>();
     public static List<String> alphabet = new ArrayList<>();
+    public static LinkedHashMap<String, String[]> transitionTable = new LinkedHashMap<>();
 
     // NFA variable(s)
     public static Automaton NFA = new Automaton();
@@ -29,12 +30,15 @@ public class App {
     }
 
     public static void ConvertFA(){ 
-        LinkedHashMap<String, String[]> transitionTable = getTransitionalTable();
+        String[] symbolsOfReading = alphabet.toArray(new String[alphabet.size()]);
+        Arrays.sort(symbolsOfReading);
+
+        getTransitionalTable(symbolsOfReading);
 
         /**
-         *              leitura
+         *              read
          * ---------------------------
-         * estado |   0    |   1   |
+         * state  |   0    |   1   |
          *   0    |   0    |  0,1  |
          *   1    |   2    |   2   |
          *   2    |   3    |   3   |
@@ -42,9 +46,10 @@ public class App {
          * 
         */
 
-        getInitialStatesFromDFA(transitionTable);
-        setNewStatesFromDFA(transitionTable);
- 
+        getInitialStatesFromDFA(symbolsOfReading);
+
+        setNewStatesFromDFA(symbolsOfReading);
+
     }
 
     public static void ImportFiles() throws IOException {
@@ -84,8 +89,7 @@ public class App {
             if (line.contains("<?xml") || line.contains("<type>") || line.contains("<automaton>") || line.contains("<!--") || line.contains("</automaton>")) {
                 line = ReadLine(br);
                 continue;
-            } else if (line.contains("<state")){
-                // <state id="0" name="q0">&#13;
+            } else if (line.contains("<state")){ // <state id="0" name="q0">
                 String[] stateSplited = line.split(" ");
                 // [0] <state       [1] id="0"      [2] name="q0">
     
@@ -97,7 +101,7 @@ public class App {
                 state.setID(id);
     
                 line = ReadLine(br);
-                // at this point, line can be 3 things: the closing tag </state>, the <initial/> tag or teh <final/> tag
+                // at this point, line can be 3 things: the closing tag </state>, the <initial/> tag or the <final/> tag
                 
                 while (!line.contains("</state>")){
                     if (line.contains("<x>") || line.contains("<y>")) {
@@ -108,6 +112,7 @@ public class App {
 
                     line = ReadLine(br);
                 }
+
                 states.add(state);
 
             } else if (line.contains("<transition")){
@@ -149,20 +154,24 @@ public class App {
         } else if (split.length > 1) for (String c : split) if (!alphabet.contains(c)) alphabet.add(c);
     }
 
-    public static LinkedHashMap<String, String[]> getTransitionalTable(){
-        LinkedHashMap<String, String[]> table = new LinkedHashMap<String, String[]>(); 
-        String[] characters = alphabet.toArray(new String[alphabet.size()]);
-
-        for (State s : NFA.getStates()) {
+    public static void getTransitionalTable(String[] symbolsOfReading){
+        for (State states : NFA.getStates()) {
             int aux = 0;
-            String from = s.getID();
+            String from = states.getID();
 
+            /* this represents literally the transition where the state start for each symbol
+            of the alphabet */
             String[] toFromEachState = new String[alphabet.size()];
 
-            for (String c : characters) {
-                ArrayList<Transition> transitionsRead = NFA.getSpecificTransition(from, c);
+            for (String symbol : symbolsOfReading) {
+                /* this keeps the transition(s) where we get the 'from' state, and the symbol that he
+                reads */
+                ArrayList<Transition> transitionsRead = NFA.getSpecificTransition(from, symbol);
 
                 // all the to's from a state passing with a given read
+                /* an exemple would be if we have 2 states (0 and 1). the state 0 reads a & b in a loop, 
+                and reads b to go to state 1. this variable shows that when we read 1, we can stay either in 
+                state 0 or go to state 1.*/
                 String allTo = "";
 
                 for (Transition t : transitionsRead) {
@@ -173,43 +182,43 @@ public class App {
 
                 if (allTo.endsWith(",")) allTo = allTo.substring(0, allTo.length() - 1);
                 toFromEachState[aux] = allTo;
-
                 aux++;
             }
-
-            table.put(from, toFromEachState);
+            /* as in the exemple given before, a table row would look like this:
+            
+            | state |  reads  |
+            |       | a |  b  |
+            |   0   | 0 | 0,1 |
+            */
+            transitionTable.put(from, toFromEachState);
         }
-
-        return table;
     }
 
-    public static Boolean stateExists(String id){
-        ArrayList<State> states = NFA.getStates();
+    public static Boolean stateExists(String id, Automaton FA){
+        ArrayList<State> states = FA.getStates();
         for (State state : states) if (state.getID() == id) return true;
         return false;
     }
 
-    public static void getInitialStatesFromDFA(LinkedHashMap<String, String[]> transitionTable){
+    public static void getInitialStatesFromDFA(String[] symbolsOfReading){
         ArrayList<State> states = new ArrayList<>();
-        String[] characters = alphabet.toArray(new String[alphabet.size()]);
 
         for (String state : transitionTable.keySet()) {
-            for (String c : characters) {
-                String to = transitionTable.get(state)[Integer.parseInt(c)];
+            for (int i = 0; i < symbolsOfReading.length; i++){
+                // this 'to' variable, keeps the state(s) where we go after we read the symbol
+                String to = transitionTable.get(state)[i];
                 String[] splitedTo = to.split(",");
 
-                if (splitedTo.length == 1 && stateExists(state)){
+                if (splitedTo.length == 1 && stateExists(state, NFA)){
                     State s = new State(state, NFA.getSpecificState(state).isInitial(), NFA.getSpecificState(state).isFinal(), false);
-                    
-                    // if (!states.contains(states.get(Integer.parseInt(s.getID())))) states.add(s);
                     if (AddState(s, states)) states.add(s);
                 } else if (splitedTo.length > 1){
+                    // so far, ours states were onlyu 1 digit
                     State s = new State(to.replace(",", ""), false, false, true);
                     states.add(s);
                 }
             }
         }
-
         DFA.setStates(states);
     }
 
@@ -221,12 +230,77 @@ public class App {
         else return true;
     }
 
-    public static void setNewStatesFromDFA(LinkedHashMap<String, String[]> transitionTable){
-        
-        for (State s : DFA.getStates()) {
-            if (s.addToTable()){
-                
+    public static void setNewStatesFromDFA(String[] symbolsOfReading){
+        Boolean moreStatesToAdd = false;
+
+        do {
+            for (State statesSoFar : DFA.getStates()) {
+                if (statesSoFar.addToTable()){
+                    // we need to split to make the math of states 'to'
+                    String[] splitedStates = statesSoFar.getID().split("");
+
+                    /* this represents literally the transition where the state start for each symbol
+                    of the alphabet */
+                    String[] toFromEachState = new String[alphabet.size()];
+                    
+                    int aux = 0;
+                    for (int i = 0; i < symbolsOfReading.length; i++){
+                        String transitionNewState = "";
+
+                        /* for each symbol, and for each "internal" state, we will concat the new states */
+                        for (String state : splitedStates) {
+                            transitionNewState = transitionNewState.concat(transitionTable.get(state)[i] + ","); //[0]
+                        }
+                        
+                        /* if the states are 0 and 02, the result will be 02, once its a union */
+                        transitionNewState = unionStates(transitionNewState);
+
+                        toFromEachState[aux] = transitionNewState;
+                        aux++;
+                    }
+
+                    /* the new variable 'toFromEachState' will 'sound' like:
+                    | state |   reads  |
+                    |       | a  |  b  |
+                    |   01  | 02 | 012 |
+                    */ 
+                    
+                    ArrayList<State> statesDFA = DFA.getStates();
+                    // update the state to not add to the transition table once we already did
+                    for (int i = 0; i < statesDFA.size(); i++) {
+                        if (statesDFA.get(i).getID().equals(statesSoFar.getID())) statesDFA.get(i).setAdd(false); 
+                    }
+
+                    transitionTable.put(statesSoFar.getID(), toFromEachState);
+
+                    // add the new state to DFA
+                    for (String string : toFromEachState) {
+                        if (!stateExists(string, DFA)) {
+                            statesDFA.add(new State(string, false, false, true));
+                            moreStatesToAdd = true;
+                        }
+                    }
+
+                    // we need a way to update the variable 'moreStatesToAdd' to false, otherwise it'll be in a loop
+                }
+            }
+        } while (moreStatesToAdd);
+    }
+
+    public static String unionStates(String transitionOfNewState){
+        String[] transition = transitionOfNewState.split("");
+        ArrayList<String> aux = new ArrayList<>();
+
+        for (String t : transition) {
+            if (!t.equals(",")) {
+                if (aux.size() == 0) aux.add(t);
+                else if (aux.size() > 0 && !aux.contains(t)) aux.add(t);
             }
         }
+        
+        String unionOfTransitions = "";
+        for (String string : aux) unionOfTransitions = unionOfTransitions.concat(string);
+
+        return unionOfTransitions;
     }
 }
