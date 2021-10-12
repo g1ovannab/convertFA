@@ -1,28 +1,28 @@
 package src;
 
 public class Transition {
-    private int from;
-    private int to;
+    private String from;
+    private String to;
     private String read;
 
-    public int getFrom() { return from; }
-    public void setFrom(int f) { this.from = f; }
+    public String getFrom() { return from; }
+    public void setFrom(String f) { this.from = f; }
 
-    public int getTo() { return to; }
-    public void setTo(int t) { this.to = t; }
+    public String getTo() { return to; }
+    public void setTo(String t) { this.to = t; }
 
     public String getRead() { return read; }
     public void setRead(String r) { this.read = r; }
 
-    public Transition(int f, int t, String r){
+    public Transition(String f, String t, String r){
         this.from = f;
         this.to = t;
         this.read = r;
     }
 
     public Transition() {
-        this.from = -1;
-        this.to = -1;
+        this.from = null;
+        this.to = null;
         this.read = null;
     }
 }
