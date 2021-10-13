@@ -25,8 +25,67 @@ public class App{
         ExportFiles();
     }
 
-    public static void ExportFiles() {
 
+    public static void ExportFiles() throws IOException {
+        xmlOutput output = new xmlOutput();
+        /* DFA Region */
+        File dfa = new File("files_out/dfa.jff");
+        FileWriter fwDFA = new FileWriter(dfa);
+        BufferedWriter bwDFA = new BufferedWriter(fwDFA);
+
+        bwDFA.write(output.XML());
+        bwDFA.newLine();
+        bwDFA.write("\t" + output.type());
+        bwDFA.newLine();
+        bwDFA.write("\t" + output.automaton());
+        bwDFA.newLine();
+
+        int howManyStatesNFA = NFA.getStates().size();
+        // List of states
+        for (State state : DFA.getStates()) {
+            String id;
+            if (state.getID().length() > 1) {
+                id = Integer.toString(howManyStatesNFA);
+
+                bwDFA.write("\t\t<state id=\"" + howManyStatesNFA + "\" name=\"q" + howManyStatesNFA +"\">");
+                bwDFA.newLine();
+                howManyStatesNFA++;
+            } else {
+                id = state.getID();
+                bwDFA.write("\t\t<state id=\"" + id + "\" name=\"q" + id +"\">");
+                bwDFA.newLine();
+            }
+
+            if (state.isInitial()) {
+                bwDFA.write("\t\t\t" + output.initialS());
+                bwDFA.newLine();
+            }
+            if (state.isFinal()) {
+                bwDFA.write("\t\t\t" + output.finalS());
+                bwDFA.newLine();
+            }
+
+            bwDFA.write(output.state());
+            bwDFA.newLine();
+        }
+
+        bwDFA.write("");
+
+        bwDFA.close();
+
+
+
+        /* Sentences Result Region */
+        File sentencesR = new File("files_out/sentences.txt");
+        FileReader frSR = new FileReader(sentencesR);
+        BufferedReader brSR = new BufferedReader(frSR);
+
+        // line = brSR.readLine();
+        // ReadSentences(brSR);
+        // brSR.close();
+        
+
+        
     }
 
     public static void ConvertFA(){ 
@@ -49,7 +108,6 @@ public class App{
         getInitialStatesFromDFA(symbolsOfReading);
 
         setNewStatesFromDFA(symbolsOfReading);
-
     }
 
     public static void ImportFiles() throws IOException {
@@ -65,8 +123,8 @@ public class App{
 
 
         /* Sentences Region */
-        File sentencesFile = new File("rcv-folder/sentences.txt");
-        FileReader frS = new FileReader(sentencesFile);
+        File sentences = new File("rcv-folder/sentences.txt");
+        FileReader frS = new FileReader(sentences);
         BufferedReader brS = new BufferedReader(frS);
 
         line = brS.readLine();
@@ -196,7 +254,7 @@ public class App{
 
     public static Boolean stateExists(String id, Automaton FA){
         ArrayList<State> states = FA.getStates();
-        for (State state : states) if (state.getID() == id) return true;
+        for (State state : states) if (state.getID().equals(id)) return true;
         return false;
     }
 
@@ -279,9 +337,18 @@ public class App{
                             statesDFA.add(new State(string, false, false, true));
                             moreStatesToAdd = true;
                         }
+                        
                     }
-
+                    break;
                     // we need a way to update the variable 'moreStatesToAdd' to false, otherwise it'll be in a loop
+                } else {
+                    moreStatesToAdd = false;
+                    for (State state : DFA.getStates()) {
+                        if (state.addToTable()) {
+                            moreStatesToAdd = true;
+                            break;
+                        }
+                    }
                 }
             }
         } while (moreStatesToAdd);
