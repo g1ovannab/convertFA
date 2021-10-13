@@ -76,9 +76,9 @@ public class App{
 
 
         /* Sentences Result Region */
-        File sentencesR = new File("files_out/sentences.txt");
-        FileReader frSR = new FileReader(sentencesR);
-        BufferedReader brSR = new BufferedReader(frSR);
+        // File sentencesR = new File("files_out/sentences.txt");
+        // FileReader frSR = new FileReader(sentencesR);
+        // BufferedReader brSR = new BufferedReader(frSR);
 
         // line = brSR.readLine();
         // ReadSentences(brSR);
