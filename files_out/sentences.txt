@@ -1,0 +1,16 @@
+Sentence = 0000 was NOT accepted.
+Sentence = 0001 was NOT accepted.
+Sentence = 0010 was NOT accepted.
+Sentence = 0011 was NOT accepted.
+Sentence = 0100 was accepted.
+Sentence = 0101 was accepted.
+Sentence = 0110 was accepted.
+Sentence = 0111 was accepted.
+Sentence = 1000 was NOT accepted.
+Sentence = 1001 was NOT accepted.
+Sentence = 1010 was NOT accepted.
+Sentence = 1011 was NOT accepted.
+Sentence = 1100 was accepted.
+Sentence = 1101 was accepted.
+Sentence = 1110 was accepted.
+Sentence = 1111 was accepted.

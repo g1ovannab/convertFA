@@ -10,8 +10,26 @@ public class Automaton {
     public void setStates(ArrayList<State> s) { this.states = s; }
 
     public State getSpecificState(String id) {
-        for (State s : states) if (s.getID() == id) return s;
+        for (State s : states) if (s.getID().equals(id)) return s;
         return null;
+    }
+
+    public State getInitialState(){
+        for (State s : states) if (s.isInitial()) return s;
+        return null;
+    }
+
+    public Boolean stateExists(String id){
+        for (State state : states) if (state.getID().equals(id)) return true;
+        return false;
+    }
+
+    public Boolean addState(State state, ArrayList<State> states){
+        if (states.size() > 0) {
+            for (State s : states)  if (s.getID().equals(state.getID())) return false;
+            return true;
+        }
+        else return true;
     }
 
     public ArrayList<Transition> getTransitions() { return transitions; }
